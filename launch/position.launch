@@ -1,0 +1,7 @@
+<launch>
+    <node pkg="detection" type="position_pub.py" name="position_pub" output="screen"> 
+        <param name="source" value="/home/jm/Documents/catkin_ws_manipulator/src/detection/scripts/test2.mp4"/>
+        <!-- <param name="source" value="0"/> -->
+    </node>
+	
+</launch>

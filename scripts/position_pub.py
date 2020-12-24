@@ -28,9 +28,14 @@ class CenterPub:
         delta_y = AverageMeter(max_len=self.interval)
         while not rospy.is_shutdown():
             _, frame = self.vs.read()
+            if frame is None or frame is []:
+                continue
             # get position
             _, _, frame_position = self.detector.detect(frame)
-            world_position = self.cal.frame_to_world(frame_position).squeeze()
+            world_position = self.cal.frame_to_world(frame_position)
+            if world_position is None:
+                continue
+            world_position = world_position.squeeze()
             if self.position is None:
                 self.position = world_position
 

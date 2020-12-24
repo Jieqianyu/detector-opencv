@@ -48,7 +48,7 @@ def xywh2xyxy(x):
 
 
 def show_img_debug(name, frame):
-    print("The current window is occupied by image '" + frame_name +
+    print("The current window is occupied by image '" + name +
           "'. " + "Please press esc to shut down current window and move on.")
     start = time.time()
     while True:
@@ -72,8 +72,8 @@ class Cap():
         self.camera = False
         if str(source) == '0':
             self.camera = True
-			# call API to query image
-            self.dll = cdll.LoadLibrary("libJHCap.so")
+            # call API to query image
+            self.dll = cdll.LoadLibrary("/home/jm/Documents/ubuntu_x64/JHCap2/libJHCap.so")
             self.dll.CameraInit(0)
             self.dll.CameraSetResolution(0, 0, 0, 0)
             self.dll.CameraSetContrast.argtypes = [c_int, c_double]
@@ -81,7 +81,8 @@ class Cap():
             self.buflen = c_int()
             self.width = c_int()
             self.height = c_int()
-            self.dll.CameraGetImageSize(0, byref(self.width), byref(self.height))
+            self.dll.CameraGetImageSize(
+                0, byref(self.width), byref(self.height))
             self.dll.CameraGetImageBufferSize(0, byref(self.buflen), 0x4)
             self.inbuf = create_string_buffer(self.buflen.value)
             self.img = None
@@ -90,11 +91,10 @@ class Cap():
             t = threading.Thread(target=Cap.update, args=(self,))
             t.start()
         elif source.split('.')[-1] in video_format:
-			self.cv = cv2.VideoCapture(source)
-			self.count = 0
+            self.cv = cv2.VideoCapture(source)
+            self.count = 0
         else:
             raise TypeError('No such video format.')
-        
 
     def update(self,):
         while True:
@@ -106,27 +106,36 @@ class Cap():
             time.sleep(0.01)
 
     def read(self,):
-		if self.camera:
-			img0 = None if self.img is None else self.img.copy()
-		else:
-			ret, img0 = self.cv.read()
-			self.count += 1
-			if not ret:
-				raise EOFError('Video End')
-    
-		return self.count, img0
+        if self.camera:
+            img0 = None if self.img is None else self.img.copy()
+        else:
+            ret, img0 = self.cv.read()
+            self.count += 1
+            if not ret:
+                raise EOFError('Video End')
+
+        return self.count, img0
 
 
 class CameraCalibration(object):
     def __init__(self, verbo=False):
-        self.s = 982.4449
+        # self.s = 982.4449
+        self.s = 1.2635e3
+        # self.translation = np.array(
+        #     [[-207.2518, -81.4856, 982.4449]]).reshape(3, 1)
         self.translation = np.array(
-            [[-207.2518, -81.4856, 982.4449]]).reshape(3, 1)
-        self.rotation = np.array([[0.9999, 0.0075, -0.0132],
-                                  [-0.0075, 1.0, -0.0018],
-                                  [0.0132, 0.0019, 0.9999]])
-        self.intrinsic = np.array([[2.8826e3, 0, 963.2226],
-                                   [0, 2.8854e3, 426.4272],
+            [[40.8344, 59.0136, 1.2635e3]]).reshape(3, 1)
+        # self.rotation = np.array([[0.9999, 0.0075, -0.0132],
+        #                           [-0.0075, 1.0, -0.0018],
+        #                           [0.0132, 0.0019, 0.9999]])
+        self.rotation = np.array([[-1, -0.0048, 0.0032],
+                                  [0.0048, -1, -0.0006],
+                                  [0.0032, -0.0006, 1]])
+        # self.intrinsic = np.array([[2.8826e3, 0, 963.2226],
+        #                            [0, 2.8854e3, 426.4272],
+        #                            [0, 0, 1]])
+        self.intrinsic = np.array([[2.9074e3, 0, 1044.7],
+                                   [0, 2.9114e3, 391.4],
                                    [0, 0, 1]])
 
         self.verbo = verbo
@@ -161,7 +170,9 @@ class CameraCalibration(object):
         world_position = None
         if cal_position is not None:
             world_position = cal_position.copy()
-            world_position[1] *= -1
+            world_position[0] -= 224
+            world_position[1] -= 140
+            world_position[0] *= -1
             world_position /= 1000
             world_position[0] += 0.155
             world_position[1] -= 0.225
@@ -209,4 +220,4 @@ if __name__ == "__main__":
     # cv2.destroyWindow("s")
     cal = CameraCalibration(verbo=True)
     cal.calibration_to_frame(np.zeros((3, 1)))
-    cal.frame_to_world((355, 187))
+    cal.frame_to_world((1800, 600))

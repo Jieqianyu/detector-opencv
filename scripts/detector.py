@@ -102,7 +102,6 @@ class Detector(object):
             if self.box_type == 'bbox':
                 # Get Bounding Box
                 box = np.int0(scale_bbox(xywh2xyxy(cv2.boundingRect(cnt)), 1/scale_factor)) # xyxy
-                print(box)
                 center = np.int0(np.array([(box[0] + box[2])/2, (box[1] + box[3])/2]))
             elif self.box_type == 'min_area':
                 # Get Minimum Area Box

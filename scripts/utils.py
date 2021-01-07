@@ -120,23 +120,34 @@ class Cap():
 class CameraCalibration(object):
     def __init__(self, verbo=False):
         # self.s = 982.4449
-        self.s = 1.2635e3
+        self.s = 1.2365e3
         # self.translation = np.array(
         #     [[-207.2518, -81.4856, 982.4449]]).reshape(3, 1)
         self.translation = np.array(
-            [[40.8344, 59.0136, 1.2635e3]]).reshape(3, 1)
+            [[22.9696, 38.0692, 1.2365e3]]).reshape(3, 1)
         # self.rotation = np.array([[0.9999, 0.0075, -0.0132],
         #                           [-0.0075, 1.0, -0.0018],
         #                           [0.0132, 0.0019, 0.9999]])
-        self.rotation = np.array([[-1, -0.0048, 0.0032],
-                                  [0.0048, -1, -0.0006],
-                                  [0.0032, -0.0006, 1]])
+        self.rotation = np.array([[-1, 0.0004, -0.0141],
+                                  [-0.0005, -1, 0.0096],
+                                  [-0.0140, 0.0096, 1]])
         # self.intrinsic = np.array([[2.8826e3, 0, 963.2226],
         #                            [0, 2.8854e3, 426.4272],
         #                            [0, 0, 1]])
-        self.intrinsic = np.array([[2.9074e3, 0, 1044.7],
-                                   [0, 2.9114e3, 391.4],
+        self.intrinsic = np.array([[2.8381e3, 0, 1065.7],
+                                   [0, 2.8469e3, 536.533],
                                    [0, 0, 1]])
+
+        # Calibration to world
+        self.cal_rotation = np.array([[-1, 0, 0],
+                                  [0, 1, 0],
+                                  [0, 0, 1]])
+        self.rotation_z = np.array([[0.9999, 0.014, 0],
+                                  [-0.014, 0.9999, 0],
+                                  [0, 0, 1]])
+        self.cal_rotation = np.dot(self.rotation_z, self.cal_rotation)
+        self.cal_translation = np.array(
+            [[155, -255, 0]]).reshape(3, 1)
 
         self.verbo = verbo
 
@@ -170,12 +181,11 @@ class CameraCalibration(object):
         world_position = None
         if cal_position is not None:
             world_position = cal_position.copy()
-            world_position[0] -= 224
-            world_position[1] -= 140
-            world_position[0] *= -1
-            world_position /= 1000
-            world_position[0] += 0.155
-            world_position[1] -= 0.225
+            world_position[0][0] -= 224
+            world_position[1][0] -= 140
+            world_position = self.cal_rotation.dot(world_position) + self.cal_translation
+            world_position /= 1000 
+
             if self.verbo:
                 print("frame to  world(m):",
                       world_position.squeeze())
@@ -220,4 +230,4 @@ if __name__ == "__main__":
     # cv2.destroyWindow("s")
     cal = CameraCalibration(verbo=True)
     cal.calibration_to_frame(np.zeros((3, 1)))
-    cal.frame_to_world((1800, 600))
+    cal.frame_to_world((1118.4, 624.2))

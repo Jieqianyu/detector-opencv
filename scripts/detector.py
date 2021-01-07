@@ -135,7 +135,7 @@ if __name__ == "__main__":
         # _, frame = cap.read()
         if frame is None:
             break
-        detector.detect(frame)
+        dst, _, _ = detector.detect(frame)
         time.sleep(0.01)
     # Save
     if is_save:
